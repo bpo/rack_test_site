@@ -9,6 +9,9 @@ error NoServerYet do
   "No Redis server defined yet. Please run `heroku addons:add redisgreen:test`"
 end
 
+error Redis::CannotConnectError do
+  "I can't connect to the Redis server. Contact support?"
+end
 
 get '/' do
   contents = tabular redis.keys("*").map {|k| [k, redis.get(k)]}
