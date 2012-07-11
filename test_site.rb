@@ -14,14 +14,12 @@ error Redis::CannotConnectError do
 end
 
 get '/' do
-  contents = tabular redis.keys("*").map {|k| [k, redis.get(k)]}
-  info = tabular redis.info
 
   <<-EOF
     <h1>RedisGreen Provisioning Test</h1>
 
     <br><br><br>
-    #{contents}
+    #{tabular contents}
     
     <form method="post" action="/set">
       <input type="text" name="key" value="key">
@@ -29,24 +27,38 @@ get '/' do
       <input type="submit" value="Add key">
     </form>
 
+    <form method="post" action="/bulk_add">
+      <input type="submit" value="Add #{bulk_size} keys">
+    </form>
+
     <form method="post" action="/flush">
       <input type="submit" value="Clear Database">
     </form>
 
     <br><br>
-    #{info}
+    #{tabular info}
   EOF
 end
 
 post '/set' do
   key = params[:key]
   value = params[:value]
-  redis.set key, value
+  redis.set "kv:#{key}", value
   redirect "/"
 end
 
 post "/flush" do
   redis.flushdb
+  redirect "/"
+end
+
+post "/bulk_add" do
+  ts = Time.now.to_i
+  redis.pipelined do
+    bulk_size.times do |i|
+      redis.set "bulk:#{ts}:#{i}", i
+    end
+  end
   redirect "/"
 end
 
@@ -62,6 +74,22 @@ def connect
   end
 end
 
+def contents
+  redis.keys("kv:*").map do |k|
+    [k.split(":", 2).last, redis.get(k)]
+  end
+end
+
+def info
+  redis.info.find_all do |k,v|
+    k =~ /human/ || k == "db0"
+  end
+end
+
 def tabular(hash)
   hash.map {|k,v| "<b>#{k}</b>: #{v}<br>"}.join
+end
+
+def bulk_size
+  50000
 end
