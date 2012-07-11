@@ -13,6 +13,10 @@ error Redis::CannotConnectError do
   "I can't connect to the Redis server. Contact support?"
 end
 
+error Redis::CommandError do
+  "Got an error from Redis - perhaps you've run out of memory?"
+end
+
 get '/' do
 
   <<-EOF
