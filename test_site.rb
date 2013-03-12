@@ -6,7 +6,7 @@ disable :show_exceptions
 class NoServerYet < StandardError ; end
 
 error NoServerYet do
-  "No Redis server defined yet. Please run `heroku addons:add redisgreen:test`"
+  "No Redis server defined yet. Please run `heroku addons:add redisgreen:basic`"
 end
 
 error Redis::CannotConnectError do
